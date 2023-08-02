@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
 import { Model } from 'mongoose';
+import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
 import { User } from './schemas/user.schema';
 
@@ -24,6 +25,26 @@ export class AuthService {
       email,
       password: hashedPassword,
     });
+
+    const token = this.jwtService.sign({ id: user._id });
+
+    return { token };
+  }
+
+  async login(loginDto: LoginDto): Promise<{ token: string }> {
+    const { email, password } = loginDto;
+
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const isPasswordMatched = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordMatched) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
 
     const token = this.jwtService.sign({ id: user._id });
 
