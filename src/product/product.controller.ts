@@ -1,11 +1,14 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { CloudinaryService } from 'nestjs-cloudinary';
 import { ProductService } from './product.service';
 import { Car } from './schemas/product.schema';
 
 @Controller('cars')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get()
   async getAllCars(): Promise<Car[]> {

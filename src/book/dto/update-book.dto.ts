@@ -22,8 +22,8 @@ export class UpdateBookDto {
   readonly author: string;
 
   @IsOptional()
-  @IsNumber()
-  readonly price: number;
+  @IsString()
+  readonly price: string;
 
   @IsOptional()
   @IsEnum(Category, { message: 'Please enter correct category.' })

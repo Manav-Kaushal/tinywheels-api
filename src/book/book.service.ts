@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Query } from 'express-serve-static-core';
 import * as mongoose from 'mongoose';
+import { slugifyProductName } from 'src/utils/helpers';
 import { User } from '../auth/schemas/user.schema';
 import { Book } from './schemas/book.schema';
 
@@ -37,7 +38,10 @@ export class BookService {
   }
 
   async create(book: Book, user: User): Promise<Book> {
-    const data = Object.assign(book, { user: user._id });
+    Object.assign(book, {
+      user: user._id,
+      slug: slugifyProductName(book.title),
+    });
 
     const res = await this.bookModel.create(book);
     return res;
