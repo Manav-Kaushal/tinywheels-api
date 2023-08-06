@@ -15,8 +15,18 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async singUp(singUpDto: SignUpDto): Promise<{ token: string }> {
-    const { name, email, password } = singUpDto;
+  async singUp(
+    singUpDto: SignUpDto,
+  ): Promise<{ message: string; token?: string }> {
+    const { name, email, password, isAdmin } = singUpDto;
+
+    const emailExists = await this.userModel.findOne({ email });
+
+    if (emailExists) {
+      return {
+        message: 'Email already in use. Please sign in or use a different one.',
+      };
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -24,20 +34,28 @@ export class AuthService {
       name,
       email,
       password: hashedPassword,
+      isAdmin,
     });
 
     const token = this.jwtService.sign({ id: user._id });
 
-    return { token };
+    return { message: 'Welcome! Your account has been created', token };
   }
 
-  async login(loginDto: LoginDto): Promise<{ token: string }> {
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ user: Partial<User>; token: string }> {
     const { email, password } = loginDto;
 
-    const user = await this.userModel.findOne({ email });
+    const user = await this.userModel.findOne(
+      { email },
+      '_id name email password isAdmin',
+    );
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException(
+        'User not found for this email. Sign up instead.',
+      );
     }
 
     const isPasswordMatched = await bcrypt.compare(password, user.password);
@@ -48,6 +66,14 @@ export class AuthService {
 
     const token = this.jwtService.sign({ id: user._id });
 
-    return { token };
+    return {
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+      token,
+    };
   }
 }
