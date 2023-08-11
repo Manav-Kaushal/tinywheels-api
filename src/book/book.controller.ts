@@ -50,8 +50,6 @@ export class BookController {
       use_filename: true,
       folder: slug,
     });
-    console.log({ file });
-    console.log({ thumbnail });
 
     if (thumbnail) {
       return this.bookService.create(
