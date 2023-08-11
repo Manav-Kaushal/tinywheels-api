@@ -8,16 +8,16 @@ import { Query } from 'express-serve-static-core';
 import * as mongoose from 'mongoose';
 import { slugifyProductName } from 'src/utils/helpers';
 import { User } from '../auth/schemas/user.schema';
-import { Book } from './schemas/book.schema';
+import { Brand } from './schemas/brand.schema';
 
 @Injectable()
-export class BookService {
+export class BrandService {
   constructor(
-    @InjectModel(Book.name)
-    private bookModel: mongoose.Model<Book>,
+    @InjectModel(Brand.name)
+    private brandModel: mongoose.Model<Brand>,
   ) {}
 
-  async findAll(query: Query): Promise<Book[]> {
+  async findAll(query: Query): Promise<Brand[]> {
     const resPerPage = 20;
     const currentPage = Number(query.page) || 1;
     const skip = resPerPage * (currentPage - 1);
@@ -30,45 +30,45 @@ export class BookService {
           },
         }
       : {};
-    const books = await this.bookModel
+    const brands = await this.brandModel
       .find({ ...keyword })
       .limit(resPerPage)
       .skip(skip);
-    return books;
+    return brands;
   }
 
-  async create(book: Book, user: User): Promise<Book> {
-    Object.assign(book, {
+  async create(brand: Brand, user: User): Promise<Brand> {
+    Object.assign(brand, {
       user: user._id,
-      slug: slugifyProductName(book.title),
+      slug: slugifyProductName(brand.name),
     });
 
-    const res = await this.bookModel.create(book);
+    const res = await this.brandModel.create(brand);
     return res;
   }
 
-  async findById(id: string): Promise<Book> {
+  async findById(id: string): Promise<Brand> {
     const isValidId = mongoose.isValidObjectId(id);
 
     if (!isValidId) {
       throw new BadRequestException('PLease enter correct id.');
     }
 
-    const book = await this.bookModel.findById(id);
-    if (!book) {
-      throw new NotFoundException('Book not found!');
+    const brand = await this.brandModel.findById(id);
+    if (!brand) {
+      throw new NotFoundException('Brand not found!');
     }
-    return book;
+    return brand;
   }
 
-  async updateById(id: string, book: Book): Promise<Book> {
-    return await this.bookModel.findByIdAndUpdate(id, book, {
+  async updateById(id: string, brand: Brand): Promise<Brand> {
+    return await this.brandModel.findByIdAndUpdate(id, brand, {
       new: true,
       runValidators: true,
     });
   }
 
-  async deleteById(id: string): Promise<Book> {
-    return await this.bookModel.findByIdAndDelete(id);
+  async deleteById(id: string): Promise<Brand> {
+    return await this.brandModel.findByIdAndDelete(id);
   }
 }

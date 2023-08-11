@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CloudinaryModule } from 'nestjs-cloudinary';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
-import { BookModule } from './book/book.module';
+import { BrandModule } from './brand/brand.module';
 import { ProductModule } from './product/product.module';
 
 @Module({
@@ -24,7 +24,7 @@ import { ProductModule } from './product/product.module';
       inject: [ConfigService],
     }),
     MongooseModule.forRoot(process.env.MONGODB_URL),
-    BookModule,
+    BrandModule,
     AuthModule,
     ProductModule,
   ],
