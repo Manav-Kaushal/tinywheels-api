@@ -12,6 +12,9 @@ export function slugifyProductName(productName: string) {
 export function extractPublicIdFromUrl(url: string) {
   const parts = url.split('/');
   const filenameWithExtension = parts.pop();
-  const filenameWithoutExtension = filenameWithExtension.replace('.png', '');
+  const filenameWithoutExtension = filenameWithExtension.replace(
+    /\.(png|svg|jpg)$/i,
+    '',
+  );
   return 'brands/' + filenameWithoutExtension;
 }
