@@ -53,6 +53,7 @@ export class BrandController {
   }
 
   @Put(':id')
+  @UseInterceptors(FileInterceptor('logo'))
   async updateBrand(
     @Param('id')
     id: string,

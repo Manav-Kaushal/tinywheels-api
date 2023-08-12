@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmpty, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { User } from 'src/auth/schemas/user.schema';
 
 export class CreateBrandDto {
   @IsNotEmpty()
@@ -18,4 +19,7 @@ export class CreateBrandDto {
   readonly yearFounded: string;
 
   readonly logo: string;
+
+  @IsEmpty({ message: 'You cannot pass user id.' })
+  readonly user: User;
 }

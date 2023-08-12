@@ -1,13 +1,14 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Query } from 'express-serve-static-core';
 import * as mongoose from 'mongoose';
 import { CloudinaryService } from 'nestjs-cloudinary';
-import { extractPublicIdFromUrl, slugifyProductName } from 'src/utils/helpers';
+import { extractPublicIdFromUrl } from 'src/utils/helpers';
 import { User } from '../auth/schemas/user.schema';
 import { Brand } from './schemas/brand.schema';
 
@@ -53,7 +54,6 @@ export class BrandService {
 
     Object.assign(brand, {
       user: user._id,
-      slug: slugifyProductName(brand.name),
       logo: logo.url,
     });
 
@@ -85,21 +85,36 @@ export class BrandService {
       throw new NotFoundException('Brand not found!');
     }
 
-    if (file) {
-      // Delete old image from server and save the new one in cloudinary
-      try {
+    try {
+      if (file) {
         const logoPublicId = extractPublicIdFromUrl(brandAlreadyExists.logo);
-        this.cloudinaryService.cloudinaryInstance.uploader
-          .destroy(logoPublicId)
-          .then((res) => console.log(res));
-      } catch (error) {
-        console.log({ error });
+
+        const deletionResponse =
+          await this.cloudinaryService.cloudinaryInstance.uploader.destroy(
+            logoPublicId,
+          );
+
+        if (deletionResponse.result !== 'ok') {
+          throw new Error('Failed to delete old logo from Cloudinary');
+        }
+
+        const logo = await this.cloudinaryService.uploadFile(file, {
+          filename_override: file.originalname,
+          use_filename: true,
+          folder: 'brands',
+        });
+
+        brand.logo = logo.url;
       }
+
+      return await this.brandModel.findByIdAndUpdate(id, brand, {
+        new: true,
+        runValidators: true,
+      });
+    } catch (error) {
+      console.error('Error updating brand:', error);
+      throw new InternalServerErrorException('Failed to update brand');
     }
-    return await this.brandModel.findByIdAndUpdate(id, brand, {
-      new: true,
-      runValidators: true,
-    });
   }
 
   async deleteById(id: string): Promise<void> {
