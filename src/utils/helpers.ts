@@ -8,3 +8,10 @@ export function slugifyProductName(productName: string) {
 
   return slug;
 }
+
+export function extractPublicIdFromUrl(url: string) {
+  const parts = url.split('/');
+  const filenameWithExtension = parts.pop();
+  const filenameWithoutExtension = filenameWithExtension.replace('.png', '');
+  return 'brands/' + filenameWithoutExtension;
+}

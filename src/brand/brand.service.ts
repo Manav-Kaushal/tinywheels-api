@@ -6,7 +6,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Query } from 'express-serve-static-core';
 import * as mongoose from 'mongoose';
-import { slugifyProductName } from 'src/utils/helpers';
+import { CloudinaryService } from 'nestjs-cloudinary';
+import { extractPublicIdFromUrl, slugifyProductName } from 'src/utils/helpers';
 import { User } from '../auth/schemas/user.schema';
 import { Brand } from './schemas/brand.schema';
 
@@ -15,9 +16,10 @@ export class BrandService {
   constructor(
     @InjectModel(Brand.name)
     private brandModel: mongoose.Model<Brand>,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async findAll(query: Query): Promise<Brand[]> {
+  async findAll(query: Query): Promise<{ list: Brand[]; total: number }> {
     const resPerPage = 20;
     const currentPage = Number(query.page) || 1;
     const skip = resPerPage * (currentPage - 1);
@@ -34,13 +36,25 @@ export class BrandService {
       .find({ ...keyword })
       .limit(resPerPage)
       .skip(skip);
-    return brands;
+    const total = await this.brandModel.countDocuments();
+    return { list: brands, total };
   }
 
-  async create(brand: Brand, user: User): Promise<Brand> {
+  async create(
+    brand: Brand,
+    file: Express.Multer.File,
+    user: User,
+  ): Promise<Brand> {
+    const logo = await this.cloudinaryService.uploadFile(file, {
+      filename_override: file.originalname,
+      use_filename: true,
+      folder: 'brands',
+    });
+
     Object.assign(brand, {
       user: user._id,
       slug: slugifyProductName(brand.name),
+      logo: logo.url,
     });
 
     const res = await this.brandModel.create(brand);
@@ -61,14 +75,57 @@ export class BrandService {
     return brand;
   }
 
-  async updateById(id: string, brand: Brand): Promise<Brand> {
+  async updateById(
+    id: string,
+    brand: Brand,
+    file: Express.Multer.File,
+  ): Promise<Brand> {
+    const brandAlreadyExists = await this.brandModel.findById(id);
+    if (!brandAlreadyExists) {
+      throw new NotFoundException('Brand not found!');
+    }
+
+    if (file) {
+      // Delete old image from server and save the new one in cloudinary
+      try {
+        const logoPublicId = extractPublicIdFromUrl(brandAlreadyExists.logo);
+        this.cloudinaryService.cloudinaryInstance.uploader
+          .destroy(logoPublicId)
+          .then((res) => console.log(res));
+      } catch (error) {
+        console.log({ error });
+      }
+    }
     return await this.brandModel.findByIdAndUpdate(id, brand, {
       new: true,
       runValidators: true,
     });
   }
 
-  async deleteById(id: string): Promise<Brand> {
-    return await this.brandModel.findByIdAndDelete(id);
+  async deleteById(id: string): Promise<void> {
+    const brandToDelete = await this.brandModel.findById(id);
+    if (!brandToDelete) {
+      throw new NotFoundException('Brand not found!');
+    }
+
+    try {
+      const logoPublicId = extractPublicIdFromUrl(brandToDelete.logo);
+
+      const deletionResponse =
+        await this.cloudinaryService.cloudinaryInstance.uploader.destroy(
+          logoPublicId,
+          {
+            resource_type: 'image',
+          },
+        );
+
+      if (deletionResponse.result === 'ok') {
+        await this.brandModel.findByIdAndDelete(id);
+      } else {
+        throw new Error(deletionResponse.result);
+      }
+    } catch (error) {
+      console.error('Error deleting logo from Cloudinary:', error);
+    }
   }
 }

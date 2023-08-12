@@ -17,7 +17,7 @@ export class Brand {
   yearFounded: string;
 
   @Prop()
-  logo?: string;
+  logo: string;
 }
 
 export const BrandSchema = SchemaFactory.createForClass(Brand);
