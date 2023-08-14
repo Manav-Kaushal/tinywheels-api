@@ -1,4 +1,5 @@
 import {
+  HttpException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -34,9 +35,13 @@ export class AuthService {
     const emailExists = await this.userModel.findOne({ email });
 
     if (emailExists) {
-      return {
-        message: 'Email already in use. Please sign in or use a different one.',
-      };
+      throw new HttpException(
+        {
+          message:
+            'Email already in use. Please sign in or use a different one.',
+        },
+        409,
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -66,6 +71,12 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException(
         'User not found for this email. Sign up instead.',
+      );
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException(
+        'User is not active. Please activate your account.',
       );
     }
 
