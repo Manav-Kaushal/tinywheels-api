@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
@@ -15,10 +19,17 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async getAllUsers() {
+    const users = await this.userModel.find().select('-password');
+    const total = await this.userModel.countDocuments();
+
+    return { list: users, total };
+  }
+
   async singUp(
     singUpDto: SignUpDto,
   ): Promise<{ message: string; token?: string }> {
-    const { name, email, password, isAdmin } = singUpDto;
+    const { name, email, password, isActive } = singUpDto;
 
     const emailExists = await this.userModel.findOne({ email });
 
@@ -34,7 +45,7 @@ export class AuthService {
       name,
       email,
       password: hashedPassword,
-      isAdmin,
+      isActive,
     });
 
     const token = this.jwtService.sign({ id: user._id });
@@ -71,9 +82,26 @@ export class AuthService {
         _id: user._id,
         name: user.name,
         email: user.email,
-        isAdmin: user.isAdmin,
+        isActive: user.isActive,
       },
       token,
     };
+  }
+
+  async updateById(id: string, userUpdates: Partial<User>): Promise<User> {
+    try {
+      const user = await this.userModel.findById(id).select('-password');
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+
+      Object.assign(user, userUpdates);
+
+      const updatedUser = await user.save();
+      return updatedUser;
+    } catch (error) {
+      throw new Error(`Failed to update user with ID ${id}: ${error.message}`);
+    }
   }
 }

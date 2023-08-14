@@ -1,11 +1,13 @@
 import {
   IsBoolean,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
+import { RolesEnum } from '../schemas/user.schema';
 
 export class SignUpDto {
   @IsNotEmpty()
@@ -22,6 +24,10 @@ export class SignUpDto {
   readonly password: string;
 
   @IsOptional()
+  @IsEnum(RolesEnum)
+  readonly role: RolesEnum;
+
+  @IsOptional()
   @IsBoolean()
-  readonly isAdmin: boolean;
+  readonly isActive: boolean;
 }
