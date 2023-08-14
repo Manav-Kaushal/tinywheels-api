@@ -28,10 +28,16 @@ export class AuthController {
     req,
   ): Promise<{ list: User[]; total: number }> {
     const user = req.user;
-    if (user.role === RolesEnum.ADMIN) {
+    if (
+      user.role === RolesEnum.ADMIN ||
+      user.role === RolesEnum.DEVELOPER ||
+      user.role === RolesEnum.TEAM
+    ) {
       return this.authService.getAllUsers();
     } else {
-      throw new ForbiddenException('Only admin allowed!');
+      throw new ForbiddenException(
+        'Only administrators are allowed to view the user list.',
+      );
     }
   }
 
@@ -67,7 +73,9 @@ export class AuthController {
     if (requestingUser.role === RolesEnum.ADMIN) {
       return this.authService.updateById(id, user);
     } else {
-      throw new ForbiddenException('Only admin allowed!');
+      throw new ForbiddenException(
+        'Only administrators are allowed to update user details.',
+      );
     }
   }
 }
