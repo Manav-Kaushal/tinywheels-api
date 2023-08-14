@@ -60,7 +60,7 @@ export class AuthService {
 
     const user = await this.userModel.findOne(
       { email },
-      '_id name email password isAdmin',
+      '_id name email password role isActive',
     );
 
     if (!user) {
@@ -82,6 +82,7 @@ export class AuthService {
         _id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         isActive: user.isActive,
       },
       token,
