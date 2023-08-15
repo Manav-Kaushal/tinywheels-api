@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Query as ExpressQuery } from 'express-serve-static-core';
 import { Model } from 'mongoose';
 import { CloudinaryService } from 'nestjs-cloudinary';
 import { slugifyProductName } from '../utils/helpers';
@@ -19,11 +20,11 @@ export class ProductService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async findAll(fields?: string): Promise<Product[]> {
+  async findAll(query?: ExpressQuery): Promise<Product[]> {
     try {
       let projection: any;
 
-      if (fields === 'all') {
+      if (query?.fields === 'all') {
         projection = {};
       } else {
         projection = {
@@ -36,6 +37,11 @@ export class ProductService {
           currency: 1,
           dimensions: 1,
         };
+      }
+
+      if (query?.admin) {
+        projection.stockQuantity = 1;
+        projection.isFeatured = 1;
       }
 
       const products = await this.productModel

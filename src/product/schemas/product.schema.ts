@@ -67,6 +67,9 @@ export class Product extends Document {
   additionalColors: string[];
 
   @Prop()
+  isFeatured: boolean;
+
+  @Prop()
   price: number;
 
   @Prop()

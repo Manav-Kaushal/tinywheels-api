@@ -19,7 +19,7 @@ export class ProductController {
 
   @Get()
   async getAllProducts(@Query() query: ExpressQuery): Promise<Product[]> {
-    return this.productService.findAll(query.fields as string);
+    return this.productService.findAll(query);
   }
 
   @Post('new')

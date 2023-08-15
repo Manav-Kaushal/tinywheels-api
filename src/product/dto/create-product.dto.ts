@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -43,6 +44,10 @@ export class CreateProductDto {
 
   @IsArray()
   additionalColors: string[];
+
+  @IsBoolean()
+  @Type(() => Boolean)
+  isFeatured: boolean;
 
   @IsNotEmpty()
   @IsNumber()
