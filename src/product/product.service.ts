@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -18,12 +19,37 @@ export class ProductService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async findAll(): Promise<Product[]> {
-    const products = await this.productModel.find(
-      {},
-      '_id title description brand category price currency dimensions',
-    );
-    return products;
+  async findAll(fields?: string): Promise<Product[]> {
+    try {
+      let projection: any;
+
+      if (fields === 'all') {
+        projection = {};
+      } else {
+        projection = {
+          _id: 1,
+          title: 1,
+          images: 1,
+          brand: 1,
+          category: 1,
+          price: 1,
+          currency: 1,
+          dimensions: 1,
+        };
+      }
+
+      const products = await this.productModel
+        .find({}, projection)
+        .populate('brand', '_id name logo');
+
+      if (!products || products.length === 0) {
+        throw new NotFoundException('No products found.');
+      }
+
+      return products;
+    } catch (error) {
+      throw new Error(`Error while fetching products: ${error.message}`);
+    }
   }
 
   // async findById(productId: string): Promise<Product> {

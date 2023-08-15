@@ -3,25 +3,23 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { CloudinaryService } from 'nestjs-cloudinary';
+import { Query as ExpressQuery } from 'express-serve-static-core';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductService } from './product.service';
 import { Product } from './schemas/product.schema';
 
 @Controller('products')
 export class ProductController {
-  constructor(
-    private readonly productService: ProductService,
-    private readonly cloudinaryService: CloudinaryService,
-  ) {}
+  constructor(private readonly productService: ProductService) {}
 
   @Get()
-  async getAllProducts(): Promise<Product[]> {
-    return this.productService.findAll();
+  async getAllProducts(@Query() query: ExpressQuery): Promise<Product[]> {
+    return this.productService.findAll(query.fields as string);
   }
 
   @Post('new')
