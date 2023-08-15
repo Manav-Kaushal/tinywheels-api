@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+import { User } from '../../auth/schemas/user.schema';
 
-enum CarCategory {
+export enum ProductCategory {
   SEDAN = 'Sedan',
   SUV = 'SUV',
   COUPE = 'Coupe',
@@ -18,30 +20,42 @@ enum CarCategory {
   CLASSIC_CAR = 'Classic Car',
 }
 
+export enum ModelScales {
+  ONETOTWELVE = '1:12',
+  ONETOEIGHTEEN = '1:18',
+  ONETOTWENTYFOUR = '1:24',
+  ONETOTHIRTYTWO = '1:32',
+  ONETOTHIRTYSIX = '1:36',
+  ONETOFOURTYTHREE = '1:43',
+  ONETOSIXTYFOUR = '1:64',
+  ONETOSEVENTYSIX = '1:76',
+  ONETOEIGHTYSEVEN = '1:87',
+}
+
 @Schema({
   timestamps: true,
 })
-export class Car {
+export class Product extends Document {
   @Prop()
   title: string;
+
+  @Prop({ unique: [true, 'The slug must be unique.'] })
+  slug: string;
 
   @Prop()
   description: string;
 
   @Prop()
-  category: CarCategory;
+  category: ProductCategory;
 
-  @Prop()
-  brand: string;
-
-  @Prop()
-  countryOfOrigin: string;
+  @Prop({ type: Types.ObjectId, ref: 'Brand' })
+  brand: Types.ObjectId;
 
   @Prop()
   modelNumber: string;
 
-  @Prop()
-  scale: string;
+  @Prop({ enum: ModelScales })
+  scale: ModelScales;
 
   @Prop()
   material: string;
@@ -61,32 +75,20 @@ export class Car {
   @Prop()
   stockQuantity: number;
 
-  @Prop({ type: [{ url: String, altText: String }] })
-  images: { url: string; altText: string }[];
+  @Prop()
+  images: string[];
 
-  @Prop({ type: { length: String, width: String, height: String } })
+  @Prop({ type: { length: String, width: String, height: String }, _id: false })
   dimensions: { length: string; width: string; height: string };
 
-  @Prop({ type: { value: Number, unit: String } })
+  @Prop({ type: { value: Number, unit: String }, _id: false })
   weight: { value: number; unit: string };
-
-  @Prop({
-    type: {
-      freeShipping: Boolean,
-      shippingCountries: [String],
-      estimatedDelivery: String,
-      returnPolicy: String,
-    },
-  })
-  shippingInfo: {
-    freeShipping: boolean;
-    shippingCountries: string[];
-    estimatedDelivery: string;
-    returnPolicy: string;
-  };
 
   @Prop({ type: [String] })
   tags: string[];
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  user: User;
 }
 
-export const CarSchema = SchemaFactory.createForClass(Car);
+export const ProductSchema = SchemaFactory.createForClass(Product);

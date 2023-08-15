@@ -1,9 +1,18 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from 'nestjs-cloudinary';
+import { CreateProductDto } from './dto/create-product.dto';
 import { ProductService } from './product.service';
-import { Car } from './schemas/product.schema';
+import { Product } from './schemas/product.schema';
 
-@Controller('cars')
+@Controller('products')
 export class ProductController {
   constructor(
     private readonly productService: ProductService,
@@ -11,36 +20,17 @@ export class ProductController {
   ) {}
 
   @Get()
-  async getAllCars(): Promise<Car[]> {
+  async getAllProducts(): Promise<Product[]> {
     return this.productService.findAll();
   }
 
-  // @Get(':id')
-  // async getCarById(@Param('id') carId: string): Promise<Car> {
-  //   return this.productService.findById(carId);
-  // }
-
   @Post('new')
-  // @UseGuards(AuthGuard())
+  @UseInterceptors(FilesInterceptor('images'))
   async createBook(
     @Body()
-    carData: Partial<Car>,
-    // @Req()
-    // req,
-  ): Promise<Car> {
-    return this.productService.create(carData);
+    productData: CreateProductDto,
+    @UploadedFiles() images: Array<Express.Multer.File>,
+  ): Promise<Product> {
+    return this.productService.createProduct(productData, images);
   }
-
-  // @Put(':id')
-  // async updateCar(
-  //   @Param('id') carId: string,
-  //   @Body() carData: Partial<Car>,
-  // ): Promise<Car> {
-  //   return this.productService.update(carId, carData);
-  // }
-
-  // @Delete(':id')
-  // async deleteCar(@Param('id') carId: string): Promise<Car> {
-  //   return this.productService.delete(carId);
-  // }
 }

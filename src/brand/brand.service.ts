@@ -8,8 +8,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Query } from 'express-serve-static-core';
 import * as mongoose from 'mongoose';
 import { CloudinaryService } from 'nestjs-cloudinary';
-import { extractPublicIdFromUrl } from 'src/utils/helpers';
 import { User } from '../auth/schemas/user.schema';
+import { extractPublicIdFromUrl } from '../utils/helpers';
 import { Brand } from './schemas/brand.schema';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class BrandService {
 
     const keyword = query.keyword
       ? {
-          title: {
+          name: {
             $regex: query.keyword,
             $options: 'i',
           },
@@ -87,7 +87,10 @@ export class BrandService {
 
     try {
       if (file) {
-        const logoPublicId = extractPublicIdFromUrl(brandAlreadyExists.logo);
+        const logoPublicId = extractPublicIdFromUrl(
+          brandAlreadyExists.logo,
+          'brands',
+        );
 
         const deletionResponse =
           await this.cloudinaryService.cloudinaryInstance.uploader.destroy(
@@ -104,7 +107,7 @@ export class BrandService {
           folder: 'brands',
         });
 
-        brand.logo = logo.url;
+        brand.logo = logo.secure_url;
       }
 
       return await this.brandModel.findByIdAndUpdate(id, brand, {
@@ -124,7 +127,7 @@ export class BrandService {
     }
 
     try {
-      const logoPublicId = extractPublicIdFromUrl(brandToDelete.logo);
+      const logoPublicId = extractPublicIdFromUrl(brandToDelete.logo, 'brands');
 
       const deletionResponse =
         await this.cloudinaryService.cloudinaryInstance.uploader.destroy(
