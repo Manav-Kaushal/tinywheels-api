@@ -46,13 +46,19 @@ export class Product extends Document {
   description: string;
 
   @Prop()
+  body: string;
+
+  @Prop()
+  thumbnail: string;
+
+  @Prop()
   category: ProductCategory;
 
   @Prop({ type: Types.ObjectId, ref: 'Brand' })
   brand: Types.ObjectId;
 
   @Prop()
-  modelNumber: string;
+  sku: string;
 
   @Prop({ enum: ModelScales })
   scale: ModelScales;
@@ -63,8 +69,8 @@ export class Product extends Document {
   @Prop()
   color: string;
 
-  @Prop({ type: [String] })
-  additionalColors: string[];
+  @Prop()
+  additionalColors: string;
 
   @Prop()
   isFeatured: boolean;
@@ -87,8 +93,14 @@ export class Product extends Document {
   @Prop({ type: { value: Number, unit: String }, _id: false })
   weight: { value: number; unit: string };
 
-  @Prop({ type: [String] })
-  tags: string[];
+  @Prop({
+    type: { title: String, description: String, keywords: String },
+    _id: false,
+  })
+  meta: { title: string; description: string; keywords: string };
+
+  @Prop()
+  tags: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User' })
   user: User;

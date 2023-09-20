@@ -18,3 +18,8 @@ export function extractPublicIdFromUrl(url: string, folderName: string) {
   );
   return `${folderName}/` + filenameWithoutExtension;
 }
+
+export const validateStringFormat = (input: string): boolean => {
+  const regex = /^(\w+\s*\d+\s*,\s*)+\w+\s*\d+\s*$/;
+  return regex.test(input);
+};

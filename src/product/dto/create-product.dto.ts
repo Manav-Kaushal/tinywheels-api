@@ -1,10 +1,10 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray,
   IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 import { ModelScales, ProductCategory } from '../schemas/product.schema';
@@ -19,6 +19,10 @@ export class CreateProductDto {
   description: string;
 
   @IsNotEmpty()
+  @IsString()
+  body: string;
+
+  @IsNotEmpty()
   @IsEnum(ProductCategory)
   category: ProductCategory;
 
@@ -28,7 +32,7 @@ export class CreateProductDto {
 
   @IsNotEmpty()
   @IsString()
-  modelNumber: string;
+  sku: string;
 
   @IsNotEmpty()
   @IsEnum(ModelScales)
@@ -42,8 +46,9 @@ export class CreateProductDto {
   @IsString()
   color: string;
 
-  @IsArray()
-  additionalColors: string[];
+  @IsOptional()
+  @IsString()
+  additionalColors: string;
 
   @IsBoolean()
   @Type(() => Boolean)
@@ -69,8 +74,10 @@ export class CreateProductDto {
   dimensions: { length: string; width: string; height: string };
 
   @IsNotEmpty()
+  meta: { title: string; description: string; keywords: string };
+
+  @IsNotEmpty()
   weight: { value: number; unit: string };
 
-  @IsArray()
-  tags: string[];
+  tags: string;
 }

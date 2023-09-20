@@ -30,6 +30,7 @@ export class ProductService {
         projection = {
           _id: 1,
           title: 1,
+          thumbnail: 1,
           images: 1,
           brand: 1,
           category: 1,
@@ -54,7 +55,8 @@ export class ProductService {
 
       return products;
     } catch (error) {
-      throw new Error(`Error while fetching products: ${error.message}`);
+      return [];
+      // throw new Error(`Error while fetching products: ${error.message}`);
     }
   }
 
@@ -88,6 +90,7 @@ export class ProductService {
 
       const createdProduct = await this.productModel.create({
         ...productData,
+        thumbnail: imageUrls[0],
         images: imageUrls,
         slug,
       });
