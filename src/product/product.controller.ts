@@ -18,7 +18,9 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Get()
-  async getAllProducts(@Query() query: ExpressQuery): Promise<Product[]> {
+  async getAllProducts(
+    @Query() query: ExpressQuery,
+  ): Promise<{ list: Product[]; total: number }> {
     return this.productService.findAll(query);
   }
 

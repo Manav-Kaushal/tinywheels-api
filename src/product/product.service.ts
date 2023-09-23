@@ -20,7 +20,9 @@ export class ProductService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async findAll(query?: ExpressQuery): Promise<Product[]> {
+  async findAll(
+    query?: ExpressQuery,
+  ): Promise<{ list: Product[]; total: number }> {
     try {
       let projection: any;
 
@@ -48,15 +50,15 @@ export class ProductService {
       const products = await this.productModel
         .find({}, projection)
         .populate('brand', '_id name logo');
-
       if (!products || products.length === 0) {
         throw new NotFoundException('No products found.');
       }
 
-      return products;
+      const total = await this.productModel.countDocuments();
+      return { list: products, total };
     } catch (error) {
-      return [];
-      // throw new Error(`Error while fetching products: ${error.message}`);
+      // return { data: [] };
+      throw new Error(`Error while fetching products: ${error.message}`);
     }
   }
 
