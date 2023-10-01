@@ -2,13 +2,11 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Query as ExpressQuery } from 'express-serve-static-core';
 import { Model } from 'mongoose';
 import { CloudinaryService } from 'nestjs-cloudinary';
-import { slugifyProductName } from '../utils/helpers';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Product } from './schemas/product.schema';
 
@@ -19,6 +17,23 @@ export class ProductService {
     private readonly productModel: Model<Product>,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
+
+  private async uploadProductImage(
+    slug: string,
+    image: Express.Multer.File,
+    folderName: string,
+  ): Promise<any> {
+    try {
+      return await this.cloudinaryService.uploadFile(image, {
+        filename_override: image.originalname,
+        use_filename: true,
+        folder: `${folderName}/${slug}`,
+      });
+    } catch (error) {
+      console.error('Error uploading product image:', error);
+      throw new InternalServerErrorException('Error uploading product image');
+    }
+  }
 
   async findAll(
     query?: ExpressQuery,
@@ -50,14 +65,10 @@ export class ProductService {
       const products = await this.productModel
         .find({}, projection)
         .populate('brand', '_id name logo');
-      if (!products || products.length === 0) {
-        throw new NotFoundException('No products found.');
-      }
 
       const total = await this.productModel.countDocuments();
       return { list: products, total };
     } catch (error) {
-      // return { data: [] };
       throw new Error(`Error while fetching products: ${error.message}`);
     }
   }
@@ -70,22 +81,21 @@ export class ProductService {
     productData: CreateProductDto,
     images: Express.Multer.File[],
   ): Promise<Product> {
-    const slug = slugifyProductName(productData.title);
-
-    const productExists = await this.productModel.exists({ slug });
-
-    if (productExists) {
-      throw new ConflictException('Product with the same slug already exists.');
-    }
-
     try {
+      const { slug } = productData;
+      const productExists = await this.productModel.findOne({
+        slug,
+      });
+
+      if (productExists) {
+        throw new ConflictException(
+          'Product with the same slug already exists.',
+        );
+      }
+
       const imageUrls = await Promise.all(
         images.map(async (image) => {
-          const result = await this.cloudinaryService.uploadFile(image, {
-            filename_override: image.originalname,
-            use_filename: true,
-            folder: `products/${slug}`,
-          });
+          const result = await this.uploadProductImage(slug, image, 'products');
           return result.secure_url;
         }),
       );
@@ -99,8 +109,10 @@ export class ProductService {
 
       return createdProduct;
     } catch (error) {
-      console.error('Error creating product:', error);
-      throw new InternalServerErrorException('Error creating product.');
+      console.error('Error creating product:', error?.message);
+      throw new InternalServerErrorException(
+        error?.message || `Error creating product`,
+      );
     }
   }
 

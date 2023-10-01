@@ -16,9 +16,13 @@ export class CreateProductDto {
 
   @IsNotEmpty()
   @IsString()
+  slug: string;
+
+  @IsOptional()
+  @IsString()
   description: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   body: string;
 
@@ -73,7 +77,7 @@ export class CreateProductDto {
   @IsNotEmpty()
   dimensions: { length: string; width: string; height: string };
 
-  @IsNotEmpty()
+  @IsOptional()
   meta: { title: string; description: string; keywords: string };
 
   @IsNotEmpty()
