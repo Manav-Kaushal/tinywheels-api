@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Query as ExpressQuery } from 'express-serve-static-core';
 import { Model } from 'mongoose';
 import { CloudinaryService } from 'nestjs-cloudinary';
+import { NotFoundError } from 'rxjs';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Product } from './schemas/product.schema';
 
@@ -48,12 +49,12 @@ export class ProductService {
           _id: 1,
           title: 1,
           thumbnail: 1,
-          images: 1,
           brand: 1,
           category: 1,
           price: 1,
           currency: 1,
           dimensions: 1,
+          slug: 1,
         };
       }
 
@@ -73,9 +74,18 @@ export class ProductService {
     }
   }
 
-  // async findById(productId: string): Promise<Product> {
-  //   return this.productModel.findById(productId);
-  // }
+  async findBySlug(productSlug: string): Promise<Product | null> {
+    try {
+      const product = await this.productModel.findOne({ slug: productSlug });
+
+      if (!product) {
+        throw new NotFoundError(`Product with slug ${productSlug} not found`);
+      }
+      return product;
+    } catch (error) {
+      throw new InternalServerErrorException(`${error.message}`);
+    }
+  }
 
   async createProduct(
     productData: CreateProductDto,

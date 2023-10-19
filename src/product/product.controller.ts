@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   UploadedFiles,
@@ -22,6 +23,14 @@ export class ProductController {
     @Query() query: ExpressQuery,
   ): Promise<{ list: Product[]; total: number }> {
     return this.productService.findAll(query);
+  }
+
+  @Get(':slug')
+  async getSingleProductBySlug(
+    @Param('slug')
+    slug: string,
+  ): Promise<Product> {
+    return this.productService.findBySlug(slug);
   }
 
   @Post('new')
